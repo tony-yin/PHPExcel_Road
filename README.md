@@ -159,13 +159,17 @@ $objexcel->getActiveSheet();    //return sheet1 sheet2 sheet 3
 
 #### 10. 合并单元格导入问题
 > 在特殊的表格中，合并单元格普遍存在，而多个单元格合并成的一个单元格，只能`setValue()`一次，而我们如何判断合并单元格的具体行列呢？
+
 ```php
 $range = $start_cell->getMergeRange();  // 通过合并单元格的开始单元格比如‘A1’，获取合并范围‘A1:A4’
 $cell->isInRange($range);    // 遍历之后每一个单元格便可通过isInRange()方法判断当前单元格是否在合并范围内
 ```
+
 ### 三、高级：特殊场景特殊手段
+
 #### 1. 单元格文本格式数据处理 
-> 一般excel单元格中数据的格式为数据类型，而`PHPExcel`中的`getValue()`方法读取的也是数据类型，当把数据从数据类型改为文本类型后，在`PHPExcel`中读出来的是`PHPExcel_RichText`类型，`getValue()`读取返回`PHPExcel_RichText`是一个`object`类型（`PHPExcel_RichText`数据保存格式）；那如何读取这一类的数据呢？仔细查看读取出来的对象，不难发现有`getPlainText()`这样的方法可以读取文本类型数据，所以我们只要判断当当前数据为文本数据时用`getPlainText()`读取，一般数据用`getValue()`读取
+>  一般excel单元格中数据的格式为数据类型，而`PHPExcel`中的`getValue()`方法读取的也是数据类型，当把数据从数据类型改为文本类型后，在`PHPExcel`中读出来的是`PHPExcel_RichText`类型，`getValue()`读取返回`PHPExcel_RichText`是一个`object`类型（`PHPExcel_RichText`数据保存格式）；那如何读取这一类的数据呢？仔细查看读取出来的对象，不难发现有`getPlainText()`这样的方法可以读取文本类型数据，所以我们只要判断当当前数据为文本数据时用`getPlainText()`读取，一般数据用`getValue()`读取
+
 ```php
 if ($cell->getValue() instanceof PHPExcel_RichText) {
     $value = $cell->getValue();
@@ -173,6 +177,7 @@ if ($cell->getValue() instanceof PHPExcel_RichText) {
     $value = $cell->getValue();
 }
 ```
+
 > 参考资料
 >
 > http://www.cnblogs.com/DS-CzY/p/4955655.html
@@ -180,6 +185,7 @@ if ($cell->getValue() instanceof PHPExcel_RichText) {
 
 #### 2. 单元格数据算法处理
 > excel拥有强大的算法功能，一般算法格式为`=A3+A4`这类的，复杂的更多，如果使用PHPExcel提供的默认读取方法`getValue()`读取出来的结果则为字符串'=A3+A4',好在PHPExcel也足够强大，提供了相应的接口：`getCalculatedValue()`，这个方法专门读取算法数据，但是我们不能将这个方法作为默认读取方法，因为这样可能会将一些本来要读成字符串的读成算法数据，而且PHPExcel没有将它作为默认读取方法的另一个重要原因就是算法方式读取很耗时间和性能，一般数据读取根本没有必要这样浪费资源，所以我们可以采用以下这种方式
+
 ```php
 if (strstr($cell->getValue(), '=')) {   
     // 判断如果cell内容以=号开头便默认为算法数据
@@ -191,6 +197,7 @@ if (strstr($cell->getValue(), '=')) {
 
 #### 3. 日期数据处理
 > 除了以上所说的文本数据和算法数据外，我还遇到过日期类型数据，比如2016-12-28输入到excel中，它会默认转换成2016/12/28，如果采用一般的`getValue()`方式读取也会读取到错误的数据，PHPExcel也提供了相应的接口`getFormattedValue()`,并提供了适配的识别方式`PHPExcel_Shared_Date::isDateTime($cell)`,所以代码就很好实现了
+
 ```php
 if (PHPExcel_Shared_Date::isDateTime($cell)) {
     $value = $cell->getFormattedValue(); 
@@ -198,8 +205,10 @@ if (PHPExcel_Shared_Date::isDateTime($cell)) {
     $value = $cell->getValue();
 }
 ```
+
 #### 4. 读取方法封装
 > 针对excel各种数据类型，我们可以写一个函数，将原有的`getValue()`封装一下，这样以后就不用每次都判别一下数据类型了，目前我只遇到上面三种特殊格式，如果有新的，欢迎大家补充，封装函数如下
+
 ```php
 function get_value_of_cell($cell) {
     if (strstr($cell->getValue(), '=')) {   
@@ -213,6 +222,7 @@ function get_value_of_cell($cell) {
     }
 }
 ```
+
 #### 5. 导出文件在IE、360等浏览器中文件名中文乱码问题
 ```php
 $filename = 'xxx导出表';
